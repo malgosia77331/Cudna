@@ -120,11 +120,11 @@ int matrixMultiply(int argc, char **argv, int block_size, dim3 &dimsA, dim3 &dim
     // Performs warmup operation using matrixMul CUDA kernel
     if (block_size == 16)
     {
-        matrixMulCUDA<16><<< grid, threads >>>(d_C, d_A, d_B, dimsA.x, dimsB.x);
+        matrixMulCUDA<16><<< grid, threads >>>(d_C, d_A, d_B, dimsA.x);
     }
     else
     {
-        matrixMulCUDA<32><<< grid, threads >>>(d_C, d_A, d_B, dimsA.x, dimsB.x);
+        matrixMulCUDA<32><<< grid, threads >>>(d_C, d_A, d_B, dimsA.x);
     }
 
     printf("done\n");
@@ -166,11 +166,11 @@ int matrixMultiply(int argc, char **argv, int block_size, dim3 &dimsA, dim3 &dim
     {
         if (block_size == 16)
         {
-            matrixMulCUDA<16><<< grid, threads >>>(d_C, d_A, d_B, dimsA.x, dimsB.x);
+            matrixMulCUDA<16><<< grid, threads >>>(d_C, d_A, d_B, dimsA.x);
         }
         else
         {
-            matrixMulCUDA<32><<< grid, threads >>>(d_C, d_A, d_B, dimsA.x, dimsB.x);
+            matrixMulCUDA<32><<< grid, threads >>>(d_C, d_A, d_B, dimsA.x);
         }
     }
 
