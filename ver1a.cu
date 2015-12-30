@@ -315,7 +315,7 @@ int main(int argc, char **argv)
     int block_size = (deviceProp.major < 2) ? 16 : 32;
 
     dim3 dimsA(5*2*block_size, 5*2*block_size, 1);
-    dim3 dimsB(5*4*block_size, 5*2*block_size, 1);
+    dim3 dimsB(5*2*block_size, 5*2*block_size, 1);
 
     // width of Matrix A
     if (checkCmdLineFlag(argc, (const char **)argv, "wA"))
