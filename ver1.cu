@@ -111,7 +111,8 @@ int matrixMultiply(int argc, char **argv, int block_size, dim3 &dimsA, dim3 &dim
 
     // Setup execution parameters
     dim3 threads(block_size, block_size);
-    dim3 grid(dimsB.x / threads.x, dimsA.y / threads.y);
+	dim3 grid(1,1);
+    //-----dim3 grid(dimsB.x / threads.x, dimsA.y / threads.y);
 
     // Create and start timer
     printf("Computing result using CUDA Kernel...\n");
