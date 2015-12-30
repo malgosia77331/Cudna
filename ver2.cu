@@ -22,8 +22,10 @@ void matrixMulCUDA(float *C, float *A, float *B, int width) //zakładam że kwad
 		return;
     float Csub = 0;     //tymczasowy wynik
 	for (int k = 0; k < width; ++k)
-		Csub += A[width*ty+k] * B[k*width+tx]; //obliczenia
-    C[width * ty + tx] = Csub; //zapis lokalnej wartości do tablicy wynikowej
+		Csub = += A[ty][k] * B[k][tx];
+	C[ty][tx] = Csub;
+		//--Csub += A[width*ty+k] * B[k*width+tx]; //obliczenia
+    //--C[width * ty + tx] = Csub; //zapis lokalnej wartości do tablicy wynikowej
 } 
 
 void constantInit(float *data, int size, float val)
@@ -119,11 +121,11 @@ int matrixMultiply(int argc, char **argv, int block_size, dim3 &dimsA, dim3 &dim
     // Performs warmup operation using matrixMul CUDA kernel
     if (block_size == 16)
     {
-        matrixMulCUDA<16><<< grid, threads >>>(d_C, d_A, d_B, dimsA.x, dimsB.x);
+        matrixMulCUDA<16><<< grid, threads >>>(d_C, d_A, d_B, dimsA.x);
     }
     else
     {
-        matrixMulCUDA<32><<< grid, threads >>>(d_C, d_A, d_B, dimsA.x, dimsB.x);
+        matrixMulCUDA<32><<< grid, threads >>>(d_C, d_A, d_B, dimsA.x);
     }
 
     printf("done\n");
@@ -165,11 +167,11 @@ int matrixMultiply(int argc, char **argv, int block_size, dim3 &dimsA, dim3 &dim
     {
         if (block_size == 16)
         {
-            matrixMulCUDA<16><<< grid, threads >>>(d_C, d_A, d_B, dimsA.x, dimsB.x);
+            matrixMulCUDA<16><<< grid, threads >>>(d_C, d_A, d_B, dimsA.x);
         }
         else
         {
-            matrixMulCUDA<32><<< grid, threads >>>(d_C, d_A, d_B, dimsA.x, dimsB.x);
+            matrixMulCUDA<32><<< grid, threads >>>(d_C, d_A, d_B, dimsA.x);
         }
     }
 
