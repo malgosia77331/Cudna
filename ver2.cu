@@ -1,4 +1,32 @@
-#define WIN32
+/**
+ * Copyright 1993-2012 NVIDIA Corporation.  All rights reserved.
+ *
+ * Please refer to the NVIDIA end user license agreement (EULA) associated
+ * with this source code for terms and conditions that govern your use of
+ * this software. Any use, reproduction, disclosure, or distribution of
+ * this software and related documentation outside the terms of the EULA
+ * is strictly prohibited.
+ *
+ */
+
+/**
+ * Matrix multiplication: C = A * B.
+ * Host code.
+ *
+ * This sample implements matrix multiplication as described in Chapter 3
+ * of the programming guide.
+ * It has been written for clarity of exposition to illustrate various CUDA
+ * programming principles, not with the goal of providing the most
+ * performant generic kernel for matrix multiplication.
+ *
+ * See also:
+ * V. Volkov and J. Demmel, "Benchmarking GPUs to tune dense linear algebra,"
+ * in Proc. 2008 ACM/IEEE Conf. on Superconducting (SC '08),
+ * Piscataway, NJ: IEEE Press, 2008, pp. Art. 31:1-11.
+ */
+
+// System includes
+ #define WIN32
 #include <stdio.h>
 #include <assert.h>
 
@@ -12,21 +40,21 @@
  * Matrix multiplication (CUDA Kernel) on the device: C = A * B
  * wA is A's width and wB is B's width
  */
-template <int BLOCK_SIZE> __global__ 
-void matrixMulCUDA(float *C, float *A, float *B, int width) //zakładam że kwadratowa
-{  
-	//pobieranie współrzędnych wątku (uwaga na współrzędne bloku)
-    int tx = blockIdx.x*BLOCK_SIZE+threadIdx.x;
-    int ty = blockIdx.y*BLOCK_SIZE+threadIdx.y;  
-	if(tx>width||ty>width)//jeśli niewłaściwy indeks to skończ
-		return;
-    float Csub = 0;     //tymczasowy wynik
-	for (int k = 0; k < width; ++k)
-		Csub = += A[ty][k] * B[k][tx];
-	C[ty][tx] = Csub;
-		//--Csub += A[width*ty+k] * B[k*width+tx]; //obliczenia
-    //--C[width * ty + tx] = Csub; //zapis lokalnej wartości do tablicy wynikowej
-} 
+
+template <int BLOCK_SIZE> __global__ void
+matrixMulCUDA(float *C, float *A, float *B, int width)
+{
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+	int col = blockIdx.x * blockDim.x + threadIdx.x;
+
+    float Csub = 0;
+
+    for (int k = 0; k < width; k++)
+	{
+		Csub += A[row * width + k] * B[k * width + col];
+	}
+	C[row * width + col] = Csub;
+}
 
 void constantInit(float *data, int size, float val)
 {
@@ -161,7 +189,7 @@ int matrixMultiply(int argc, char **argv, int block_size, dim3 &dimsA, dim3 &dim
     }
 
     // Execute the kernel
-    int nIter = 300;
+    int nIter = 1;
 
     for (int j = 0; j < nIter; j++)
     {
