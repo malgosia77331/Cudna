@@ -1,4 +1,32 @@
-#define WIN32
+/**
+ * Copyright 1993-2012 NVIDIA Corporation.  All rights reserved.
+ *
+ * Please refer to the NVIDIA end user license agreement (EULA) associated
+ * with this source code for terms and conditions that govern your use of
+ * this software. Any use, reproduction, disclosure, or distribution of
+ * this software and related documentation outside the terms of the EULA
+ * is strictly prohibited.
+ *
+ */
+
+/**
+ * Matrix multiplication: C = A * B.
+ * Host code.
+ *
+ * This sample implements matrix multiplication as described in Chapter 3
+ * of the programming guide.
+ * It has been written for clarity of exposition to illustrate various CUDA
+ * programming principles, not with the goal of providing the most
+ * performant generic kernel for matrix multiplication.
+ *
+ * See also:
+ * V. Volkov and J. Demmel, "Benchmarking GPUs to tune dense linear algebra,"
+ * in Proc. 2008 ACM/IEEE Conf. on Superconducting (SC '08),
+ * Piscataway, NJ: IEEE Press, 2008, pp. Art. 31:1-11.
+ */
+
+// System includes
+ #define WIN32
 #include <stdio.h>
 #include <assert.h>
 
@@ -12,19 +40,27 @@
  * Matrix multiplication (CUDA Kernel) on the device: C = A * B
  * wA is A's width and wB is B's width
  */
-__global__ 
-void matrixMulCUDA(float *C, float *A, float *B, int width) //zakładam że kwadratowa
-{  
-	//pobieranie współrzędnych wątku
+template <int BLOCK_SIZE> __global__ void
+matrixMulCUDA(float *C, float *A, float *B, int width)
+{
     int tx = threadIdx.x;
-    int ty = threadIdx.y;  
-	if(tx>width||ty>width)//jeśli niewłaściwy indeks to skończ
-		return;
-    float Csub = 0;     //tymczasowy wynik
-	for (int k = 0; k < width; ++k)
-		Csub += A[width*ty+k] * B[k*width+tx]; 
-    C[width * ty + tx] = Csub; //zapis lokalnej wartości do tablicy wynikowej
-} 
+    int ty = threadIdx.y;
+
+    float Csub = 0;
+
+    for (int a = tx; a < width; a+=BLOCK_SIZE)
+    {
+		for (int b = ty; b < width; b+= BLOCK_SIZE)
+		{
+			Csub = 0;
+			for (int k = 0; k < width; k++)
+			{
+				Csub += A[b*width + k] * B[k*width + a];
+		    }
+			C[b * width + a] = Csub;
+		}
+    }
+}
 
 void constantInit(float *data, int size, float val)
 {
@@ -111,8 +147,7 @@ int matrixMultiply(int argc, char **argv, int block_size, dim3 &dimsA, dim3 &dim
 
     // Setup execution parameters
     dim3 threads(block_size, block_size);
-	dim3 grid(1,1);
-    //-----dim3 grid(dimsB.x / threads.x, dimsA.y / threads.y);
+    dim3 grid(dimsB.x / threads.x, dimsA.y / threads.y);
 
     // Create and start timer
     printf("Computing result using CUDA Kernel...\n");
@@ -315,7 +350,7 @@ int main(int argc, char **argv)
     int block_size = (deviceProp.major < 2) ? 16 : 32;
 
     dim3 dimsA(5*2*block_size, 5*2*block_size, 1);
-    dim3 dimsB(5*2*block_size, 5*2*block_size, 1);
+    dim3 dimsB(5*4*block_size, 5*2*block_size, 1);
 
     // width of Matrix A
     if (checkCmdLineFlag(argc, (const char **)argv, "wA"))
